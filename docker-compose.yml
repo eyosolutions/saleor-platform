@@ -82,6 +82,9 @@ services:
     restart: unless-stopped
     networks:
       - saleor-backend-tier
+    volumes:
+      - type: tmpfs
+        target: /tmp
 
   mailpit:
     image: axllent/mailpit
