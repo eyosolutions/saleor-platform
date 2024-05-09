@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-map
+data:
+  common.env: |
+    DEFAULT_CHANNEL_SLUG=default-channel
+    HTTP_IP_FILTER_ALLOW_LOOPBACK_IPS=True
+    HTTP_IP_FILTER_ENABLED=True
+  backend.env: |
+    CELERY_BROKER_URL=redis://redis:6379/1
+    DATABASE_URL=postgres://saleor:saleor@postgresdb-svc.saleor.svc.cluster.local:5432/saleor
+    DEFAULT_FROM_EMAIL=noreply@example.com
+    EMAIL_URL=smtp://mailpit:1025
+    SECRET_KEY=changeme
+  replica_user.sql: |
+    CREATE USER saleor_read_only WITH PASSWORD 'saleor';
+    GRANT CONNECT ON DATABASE saleor TO saleor_read_only;
+    GRANT USAGE ON SCHEMA public TO saleor_read_only;
+    GRANT SELECT ON ALL TABLES IN SCHEMA public TO saleor_read_only;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO saleor_read_only;

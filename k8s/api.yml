@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-dep
+spec:
+  replicas: 1 # Adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: eyodevops/saleor-core-k8s:v1
+          ports:
+            - name: api-port
+              containerPort: 8000
+          stdin: true
+          tty: true
+          volumeMounts:
+            - name: saleor-media
+              mountPath: /app/media
+          env:
+            - name: common.env
+              valueFrom:
+                configMapKeyRef:
+                  name: config-map
+                  key: common.env
+            - name: backend.env
+              valueFrom:
+                configMapKeyRef:
+                  name: config-map
+                  key: backend.env
+            - name: JAEGER_AGENT_HOST
+              value: "jaeger"
+            - name: DASHBOARD_URL
+              value: "http://localhost:9000"
+            - name: ALLOWED_HOSTS
+              value: "localhost,api"
+      volumes:
+        - name: saleor-media
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-svc
+spec:
+  selector:
+    app: api
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: api-port
+  type: LoadBalancer

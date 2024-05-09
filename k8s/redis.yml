@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-dep
+spec:
+  replicas: 1 # Adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: library/redis:7.0-alpine
+          ports:
+            - name: redis-port
+              containerPort: 6379
+          volumeMounts:
+            - name: saleor-redis
+              mountPath: /data
+      restartPolicy: Always # Adjust the restart policy as needed
+      volumes:
+        - name: saleor-redis
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-svc
+spec:
+  selector:
+    app: redis
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: redis-port

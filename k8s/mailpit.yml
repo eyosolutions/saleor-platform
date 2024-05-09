@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailpit-dep
+spec:
+  replicas: 1 # Adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: mailpit
+  template:
+    metadata:
+      labels:
+        app: mailpit
+    spec:
+      containers:
+        - name: mailpit
+          image: axllent/mailpit
+          ports:
+            - containerPort: 1025
+            - containerPort: 8025
+      restartPolicy: Always # Adjust the restart policy as needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailpit-svc
+spec:
+  selector:
+    app: mailpit
+  type: LoadBalancer
+  ports:
+    - name: mailpit-1
+      protocol: TCP
+      port: 1025
+      targetPort: 1025
+    - name: mailpit-2
+      protocol: TCP
+      port: 8025
+      targetPort: 8025

@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: django-migrate-job
+spec:
+  template:
+    spec:
+      containers:
+        - name: migration-container
+          image: eyodevops/saleor-core-k8s:v1
+          command: ["python3", "manage.py", "migrate"]
+          env:
+            - name: POSTGRES_USER
+              value: saleor
+            - name: POSTGRES_PASSWORD
+              value: saleor
+            - name: POSTGRES_DB
+              value: saleor
+        - name: populatedb-container
+          image: eyodevops/saleor-core-k8s:v1
+          command: ["python3", "manage.py", "populatedb", "--createsuperuser"]
+          env:
+            - name: POSTGRES_USER
+              value: saleor
+            - name: POSTGRES_PASSWORD
+              value: saleor
+            - name: POSTGRES_DB
+              value: saleor
+      restartPolicy: Never
+  backoffLimit: 2

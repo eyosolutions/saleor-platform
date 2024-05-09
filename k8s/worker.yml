@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-dep
+spec:
+  replicas: 1 # Adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: eyodevops/saleor-core-k8s:v1
+          volumeMounts:
+            - name: saleor-media
+              mountPath: /app/media
+          command: ["celery"]
+          args:
+            [
+              "-A",
+              "saleor",
+              "--app=saleor.celeryconf:app",
+              "worker",
+              "--loglevel=info",
+              "-B",
+            ]
+          env:
+            - name: common.env
+              valueFrom:
+                configMapKeyRef:
+                  name: config-map
+                  key: common.env
+            - name: backend.env
+              valueFrom:
+                configMapKeyRef:
+                  name: config-map
+                  key: backend.env
+      restartPolicy: Always # Adjust the restart policy as needed
+      volumes:
+        - name: saleor-media
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker-svc
+spec:
+  selector:
+    app: worker
+  ports:
+    - protocol: TCP
+      port: 8000 # Adjust the port as needed
+      targetPort: 8000 # Adjust the target port as needed

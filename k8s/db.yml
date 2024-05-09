@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresdb-dep
+spec:
+  replicas: 1 # Adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: postgresdb
+  template:
+    metadata:
+      labels:
+        app: postgresdb
+    spec:
+      containers:
+        - name: postgresdb
+          image: library/postgres:13-alpine
+          ports:
+            - name: postgresdb-port
+              containerPort: 5432
+          volumeMounts:
+            - name: saleor-db
+              mountPath: /var/lib/postgresql/data
+            - name: replica-user-script
+              mountPath: /docker-entrypoint-initdb.d
+          env:
+            - name: POSTGRES_PASSWORD
+              value: saleor
+            - name: POSTGRES_USER
+              value: saleor
+            - name: POSTGRES_DB
+              value: saleor
+      restartPolicy: Always # Adjust the restart policy as needed
+      volumes:
+        - name: saleor-db
+          emptyDir: {}
+        - name: replica-user-script
+          configMap:
+            name: config-map
+            items:
+              - key: replica_user.sql
+                path: replica_user.sql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresdb-svc
+spec:
+  selector:
+    app: postgresdb
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: postgresdb-port
